@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <cstdio>
 
+#define TRACE_VAL false
+
 typedef uint8_t byte;
 
 #define slotsof(a)	(sizeof (a) / sizeof (a[0]))

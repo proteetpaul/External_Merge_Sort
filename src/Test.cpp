@@ -6,7 +6,7 @@
 
 int main (int argc, char * argv [])
 {
-	TRACE (true);
+	TRACE (TRACE_VAL);
 
 	Plan * const plan =
 			new WitnessPlan ("output",

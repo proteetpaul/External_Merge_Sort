@@ -3,18 +3,18 @@
 WitnessPlan::WitnessPlan (char const * const name, Plan * const input)
 	: Plan (name), _input (input)
 {
-	TRACE (true);
+	TRACE (TRACE_VAL);
 } // WitnessPlan::WitnessPlan
 
 WitnessPlan::~WitnessPlan ()
 {
-	TRACE (true);
+	TRACE (TRACE_VAL);
 	delete _input;
 } // WitnessPlan::~WitnessPlan
 
 Iterator * WitnessPlan::init () const
 {
-	TRACE (true);
+	TRACE (TRACE_VAL);
 	return new WitnessIterator (this);
 } // WitnessPlan::init
 
@@ -22,12 +22,12 @@ WitnessIterator::WitnessIterator (WitnessPlan const * const plan) :
 	_plan (plan), _input (plan->_input->init ()),
 	_rows (0)
 {
-	TRACE (true);
+	TRACE (TRACE_VAL);
 } // WitnessIterator::WitnessIterator
 
 WitnessIterator::~WitnessIterator ()
 {
-	TRACE (true);
+	TRACE (TRACE_VAL);
 
 	delete _input;
 
@@ -38,7 +38,7 @@ WitnessIterator::~WitnessIterator ()
 
 bool WitnessIterator::next (Row & row)
 {
-	TRACE (true);
+	TRACE (TRACE_VAL);
 
 	if ( ! _input->next (row))  return false;
 	++ _rows;
@@ -47,6 +47,6 @@ bool WitnessIterator::next (Row & row)
 
 void WitnessIterator::free (Row & row)
 {
-	TRACE (true);
+	TRACE (TRACE_VAL);
 	_input->free (row);
 } // WitnessIterator::free

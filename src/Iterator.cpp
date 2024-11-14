@@ -2,38 +2,38 @@
 
 Row::Row ()
 {
-	TRACE (true);
+	TRACE (TRACE_VAL);
 } // Row::Row
 
 Row::~Row ()
 {
-	TRACE (true);
+	TRACE (TRACE_VAL);
 } // Row::~Row
 
 Plan::Plan (char const * const name)
 	: _name (name)
 {
-	TRACE (true);
+	TRACE (TRACE_VAL);
 } // Plan::Plan
 
 Plan::~Plan ()
 {
-	TRACE (true);
+	TRACE (TRACE_VAL);
 } // Plan::~Plan
 
 Iterator::Iterator () : _rows (0)
 {
-	TRACE (true);
+	TRACE (TRACE_VAL);
 } // Iterator::Iterator
 
 Iterator::~Iterator ()
 {
-	TRACE (true);
+	TRACE (TRACE_VAL);
 } // Iterator::~Iterator
 
 void Iterator::run ()
 {
-	TRACE (true);
+	TRACE (TRACE_VAL);
 
 	for (Row row;  next (row);  free (row))
 		++ _rows;

@@ -3,18 +3,18 @@
 SortPlan::SortPlan (char const * const name, Plan * const input)
 	: Plan (name), _input (input)
 {
-	TRACE (true);
+	TRACE (TRACE_VAL);
 } // SortPlan::SortPlan
 
 SortPlan::~SortPlan ()
 {
-	TRACE (true);
+	TRACE (TRACE_VAL);
 	delete _input;
 } // SortPlan::~SortPlan
 
 Iterator * SortPlan::init () const
 {
-	TRACE (true);
+	TRACE (TRACE_VAL);
 	return new SortIterator (this);
 } // SortPlan::init
 
@@ -22,7 +22,7 @@ SortIterator::SortIterator (SortPlan const * const plan) :
 	_plan (plan), _input (plan->_input->init ()),
 	_consumed (0), _produced (0)
 {
-	TRACE (true);
+	TRACE (TRACE_VAL);
 
 	for (Row row;  _input->next (row);  _input->free (row))
 		++ _consumed;
@@ -35,7 +35,7 @@ SortIterator::SortIterator (SortPlan const * const plan) :
 
 SortIterator::~SortIterator ()
 {
-	TRACE (true);
+	TRACE (TRACE_VAL);
 
 	traceprintf ("%s produced %lu of %lu rows\n",
 			_plan->_name,
@@ -45,7 +45,7 @@ SortIterator::~SortIterator ()
 
 bool SortIterator::next (Row & row)
 {
-	TRACE (true);
+	TRACE (TRACE_VAL);
 
 	if (_produced >= _consumed)  return false;
 
@@ -55,5 +55,5 @@ bool SortIterator::next (Row & row)
 
 void SortIterator::free (Row & row)
 {
-	TRACE (true);
+	TRACE (TRACE_VAL);
 } // SortIterator::free

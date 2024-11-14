@@ -3,18 +3,18 @@
 FilterPlan::FilterPlan (char const * const name, Plan * const input)
 	: Plan (name), _input (input)
 {
-	TRACE (true);
+	TRACE (TRACE_VAL);
 } // FilterPlan::FilterPlan
 
 FilterPlan::~FilterPlan ()
 {
-	TRACE (true);
+	TRACE (TRACE_VAL);
 	delete _input;
 } // FilterPlan::~FilterPlan
 
 Iterator * FilterPlan::init () const
 {
-	TRACE (true);
+	TRACE (TRACE_VAL);
 	return new FilterIterator (this);
 } // FilterPlan::init
 
@@ -22,12 +22,12 @@ FilterIterator::FilterIterator (FilterPlan const * const plan) :
 	_plan (plan), _input (plan->_input->init ()),
 	_consumed (0), _produced (0)
 {
-	TRACE (true);
+	TRACE (TRACE_VAL);
 } // FilterIterator::FilterIterator
 
 FilterIterator::~FilterIterator ()
 {
-	TRACE (true);
+	TRACE (TRACE_VAL);
 
 	delete _input;
 
@@ -38,7 +38,7 @@ FilterIterator::~FilterIterator ()
 
 bool FilterIterator::next (Row & row)
 {
-	TRACE (true);
+	TRACE (TRACE_VAL);
 
 	for (;;)
 	{
@@ -57,6 +57,6 @@ bool FilterIterator::next (Row & row)
 
 void FilterIterator::free (Row & row)
 {
-	TRACE (true);
+	TRACE (TRACE_VAL);
 	_input->free (row);
 } // FilterIterator::free

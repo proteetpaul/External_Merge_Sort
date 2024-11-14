@@ -1,18 +1,11 @@
 #pragma once
 
 #include "defs.h"
+#include "Record.h"
+#include <vector>
+#include <boost/align/aligned_allocator.hpp>
 
 typedef uint64_t RowCount;
-
-class Row
-{
-public:
-	Row ();
-	virtual ~Row ();
-	// ...
-private:
-	// ...
-}; // class Row
 
 class Plan
 {
@@ -36,4 +29,7 @@ public:
 	virtual void free (Row & row) = 0;
 private:
 	RowCount _rows;
+
+protected:
+	std::vector<DataRecord, boost::alignment::aligned_allocator<DataRecord, 64>> records;
 }; // class Iterator
