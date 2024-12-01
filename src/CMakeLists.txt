@@ -2,7 +2,8 @@ add_library(merge_sort SHARED
             Assert.cpp  defs.cpp    defs.h
             Filter.cpp  Filter.h    Iterator.h
             Iterator.cpp    Record.h    Scan.h
-            Sort.h  Sort.cpp Witness.cpp Witness.h)
+            Sort.h  Sort.cpp Witness.cpp Witness.h
+            Sorter.h Sorter.cpp tree.h)
 
 target_include_directories(merge_sort PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
