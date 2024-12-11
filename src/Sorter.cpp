@@ -15,7 +15,6 @@ void Sorter::add_record(Row *record) {
         current_alloc->write(static_cast<void*>(record), sizeof(Row));
         return;
     }
-    // TODO(): We can use the current_alloc for the subsequent run?
     current_alloc = std::move(sort_current_run());
     if (is_cache_filled()) {
         // Cache is full. Spill to memory

@@ -55,7 +55,6 @@ public:
         return (capacity - write_offset >= bytes);
     }
 
-    // TODO(): Make this write(ptr, offset, bytes)
     inline void write(const void *ptr, size_t bytes) {
         memcpy(start_addr + write_offset, ptr, bytes);
         write_offset += bytes;
