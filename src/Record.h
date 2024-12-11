@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <cstdint>
 #include <string>
+#include <iostream>
 // OVC is represented by a 64 bit integer. First 32 bits -> offset, next 32 bits -> value
 #define OVC uint64_t
 
@@ -19,6 +20,7 @@
 
 // Arity for ascending OVC
 const uint64_t ARITY = 3;
+const uint64_t OFFSET_MULTIPLIER = (1ll<<32);
 
 class Row {
 public:
@@ -26,14 +28,14 @@ public:
         values[0] = x;
         values[1] = y;
         values[2] = z;
-        ovc = ARITY * (1ll<<31) + x;
+        ovc = ARITY * OFFSET_MULTIPLIER + x;
     }
 
     Row() {
         values[0] = 0;
         values[1] = 0;
         values[2] = 0;
-        ovc = 0;
+        ovc = ARITY * OFFSET_MULTIPLIER;
     }
 
     virtual ~Row() = default;
@@ -48,7 +50,9 @@ public:
 
     // Returns a record representing an infinite value (used as an invalid sentinel value in tournament tree)
     static Row inf() {
-        Row d {INT32_MAX, INT32_MAX, INT32_MAX};
+        Row d {UINT32_MAX, UINT32_MAX, UINT32_MAX};
+        // std::cout << "Inf row OVC: " << d.ovc << "\n";
+        // std::cout << "RANDMAX: " << RAND_MAX << "\n";
         return d;
     }
 
@@ -57,14 +61,13 @@ public:
             return ovc < other.ovc;
         }
         uint32_t pos = ARITY - (ovc >> 32);
-        bool res;
         uint32_t i=pos+1;
         for (; i<ARITY; i++) {
             if (values[i] < other.values[i]) {
-                other.ovc = (ARITY-i) * (1ll<<32) + other.values[i];
+                other.ovc = (ARITY-i) * OFFSET_MULTIPLIER + other.values[i];
                 return true;
             } else if (values[i] > other.values[i]) {
-                ovc = (ARITY-i) * (1ll<<32) + values[i];
+                ovc = (ARITY-i) * OFFSET_MULTIPLIER + values[i];
                 return false;
             }
         }

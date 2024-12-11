@@ -22,6 +22,7 @@ Iterator * ScanPlan::init () const
 ScanIterator::ScanIterator (ScanPlan const * const plan) :
 	_plan (plan), _count (0)
 {
+	srand((unsigned int)time(NULL));
 	TRACE (TRACE_VAL);
 } // ScanIterator::ScanIterator
 
@@ -39,7 +40,7 @@ bool ScanIterator::next (Row & row)
 
 	if (_count >= _plan->_count)
 		return false;
-
+	row = *(Row::generate_random());
 	++ _count;
 	return true;
 } // ScanIterator::next
@@ -47,6 +48,4 @@ bool ScanIterator::next (Row & row)
 void ScanIterator::free (Row & row)
 {
 	TRACE (TRACE_VAL);
-	Row* new_row = dynamic_cast<Row*>(Row::generate_random());
-	row = std::move(*new_row);	
 } // ScanIterator::free

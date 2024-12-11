@@ -32,7 +32,9 @@
 // Class representing a run of size 1. This is used for implementing internal sort using tournament trees
 class SingleElementRun {
 public:
-    SingleElementRun(Row* d): d(d) {} 
+    SingleElementRun(Row* d): d(d) {
+        read_called = false;
+    } 
 
     Row read_next() {
         if (!read_called) {
@@ -56,6 +58,10 @@ private:
  */
 class SortNode {
 public:
+    SortNode() = default;
+
+    virtual ~SortNode() = default;
+
     // Read next record
     virtual Row& read_next() = 0;
 
@@ -71,6 +77,8 @@ public:
 class MergeNode : public SortNode {
 public:
     MergeNode(std::vector<std::shared_ptr<SortNode>> &input_nodes);
+
+    ~MergeNode() = default;
 
     Row& read_next() override;
 
@@ -92,6 +100,8 @@ private:
     std::shared_ptr<Alloc> output_alloc;
 
     size_t read_offset;
+
+    Row inf_row;
 };
 
 /**
@@ -101,21 +111,23 @@ class ReaderNode: public SortNode {
 public:
     ReaderNode(std::shared_ptr<Alloc> &input);
 
+    ~ReaderNode() = default;
+
     Row& read_next() override;
 
     bool is_internal_node() override {
         return false;
     }
 
-    inline size_t get_size() override {
-        return size;
-    };
+    size_t get_size() override;
 private:
     size_t size;
 
     size_t read_offset;
 
     std::shared_ptr<Alloc> input {nullptr};
+
+    Row inf_row;
 };
 
 

@@ -56,6 +56,7 @@ public:
     inline Row* read_record(size_t offset) {
         // TODO(): Add memory access check
         TRACE (false);
+        // std::cout << "Reading at offset: " << offset << "\n";
         return reinterpret_cast<Row*>(start_addr + offset);
     }
 
@@ -73,15 +74,19 @@ public:
         return (capacity - write_offset >= bytes);
     }
 
+    // TODO(): Make this write(ptr, offset, bytes)
     inline void write(const void *ptr, size_t bytes) {
         TRACE (false);
-        // std::cout << "bytes: " << bytes << "\n";
         memcpy(start_addr + write_offset, ptr, bytes);
         write_offset += bytes;
     }
 
     inline size_t get_size() {
         return write_offset;
+    }
+
+    inline size_t get_capacity() {
+        return capacity;
     }
 
     static const size_t PAGE_SIZE = 4096;

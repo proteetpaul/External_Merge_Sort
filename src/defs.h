@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <cstdio>
 
-#define TRACE_VAL true
+#define TRACE_VAL false
 
 typedef uint8_t byte;
 

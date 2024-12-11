@@ -31,17 +31,13 @@ public:
     }
     
     Row pop() {
-        ctr++;
         auto prev_top_node = std::move(top_node);
-        TRACE (false);
         leaf_to_root_pass(prev_top_node.index);
         return prev_top_node.record;
     }
 
 private:
-    // TODO(): Remove this
-    int ctr {0};
-
+    // Store the top node separately
     TournamentTreeNode top_node;
 
     // Array to hold tournament tree for external merge sort
@@ -52,13 +48,15 @@ private:
     std::vector<std::shared_ptr<ReaderType>> inputs;
 
     void initialize() {
-        TRACE (TRACE_VAL);
         size_t input_size = inputs.size();
-        // std::cout << "size of inputs: " << inputs.size() << "\n";
         uint32_t closest_power_of_2 = 1;
         while (closest_power_of_2 < input_size) {
             closest_power_of_2 *= 2;
         }
+        /** 
+         * For simplicity, we only resize the tournament tree to the required number of internal nodes
+         * In case of leaf nodes, we directly read from the corresponding input runs
+        */
         tournament_tree.resize(closest_power_of_2);
         auto res = init_helper(0);
         top_node.index = res.second;
@@ -67,7 +65,6 @@ private:
 
     // Recursive helper method for building the initial tournament tree
     std::pair<Row, uint32_t> init_helper(uint32_t i) {
-        TRACE (TRACE_VAL);
         size_t size = tournament_tree.size();
         
         if (i >= size) {
@@ -104,13 +101,14 @@ private:
 
     // Performs leaf-to-root pass in tournament tree
     void leaf_to_root_pass(uint32_t run_idx) {
-        TRACE (false);
-        // std::cout << "Run idx:" << run_idx << "\n";
-        // std::cout << inputs.size() << "\n";
-        uint32_t idx = (tournament_tree.size() + run_idx)/2;
+        /**
+         * Leaf node corresponding to index: (n + run_idx), where n -> size of tournament tree
+         * For a leaf node i, its parent will be (i-1)/2
+         */
+        uint32_t idx = (tournament_tree.size() + run_idx - 1)/2;
         auto new_record = inputs[run_idx]->read_next();
         TournamentTreeNode cur_node {new_record, run_idx};
-        while (idx >= 0) {
+        while (true) {
             /**
              * Compare cur_node and tournament_tree[idx]
              * Store the loser at position idx
@@ -122,9 +120,8 @@ private:
             if (!idx) {
                 break;
             }
-            idx /= 2;
+            idx = (idx-1)/2;
         }
         top_node = std::move(cur_node);
-        // tournament_tree[idx] = std::move(cur_node);
     }
 };

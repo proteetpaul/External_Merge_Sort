@@ -44,6 +44,7 @@ bool WitnessIterator::next (Row & row)
 	TRACE (TRACE_VAL);
 	if ( ! _input->next (row))  return false;
 	++ _rows;
+	// std::cout << "Witnessed record: " << row.to_string() << "\n";
 	witness_record.witness(row);
 	return true;
 } // WitnessIterator::next
