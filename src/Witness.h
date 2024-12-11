@@ -24,4 +24,7 @@ private:
 	Iterator * const _input;
 	RowCount _rows;
 	Row witness_record;
+	bool first;
+	RowCount inversions;
+	Row previous;
 }; // class WitnessIterator

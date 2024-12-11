@@ -21,7 +21,7 @@ Iterator * WitnessPlan::init () const
 
 WitnessIterator::WitnessIterator (WitnessPlan const * const plan) :
 	_plan (plan), _input (plan->_input->init ()),
-	_rows (0)
+	_rows (0), first (true), inversions(0)
 {
 	TRACE (TRACE_VAL);
 } // WitnessIterator::WitnessIterator
@@ -32,11 +32,11 @@ WitnessIterator::~WitnessIterator ()
 
 	delete _input;
 
-	traceprintf ("%s witnessed %lu rows\n",
+	traceprintf ("%s witnessed %lu rows, %lu inversions\n",
 			_plan->_name,
-			(unsigned long) (_rows));
-	// traceprintf ("Witness record: %s", witness_record.to_string());
-	std::cout << "Witness output: " << witness_record.to_string() << "\n";
+			(unsigned long) (_rows),
+			(unsigned long) (inversions));
+	std::cout << "Witness partity: " << witness_record.to_string() << "\n";
 } // WitnessIterator::~WitnessIterator
 
 bool WitnessIterator::next (Row & row)
@@ -44,7 +44,11 @@ bool WitnessIterator::next (Row & row)
 	TRACE (TRACE_VAL);
 	if ( ! _input->next (row))  return false;
 	++ _rows;
-	// std::cout << "Witnessed record: " << row.to_string() << "\n";
+	if (first) {
+		first = false;
+	} else if (!previous.naive_lte(row)) {
+		++inversions;
+	}
 	witness_record.witness(row);
 	return true;
 } // WitnessIterator::next
@@ -52,5 +56,6 @@ bool WitnessIterator::next (Row & row)
 void WitnessIterator::free (Row & row)
 {
 	TRACE (TRACE_VAL);
+	previous = row;
 	_input->free (row);
 } // WitnessIterator::free

@@ -7,16 +7,6 @@
 // OVC is represented by a 64 bit integer. First 32 bits -> offset, next 32 bits -> value
 #define OVC uint64_t
 
-// class Row
-// {
-// public:
-// 	Row ();
-// 	virtual ~Row ();
-// 	// ...
-// private:
-// 	// ...
-// }; // class Row
-
 
 // Arity for ascending OVC
 const uint64_t ARITY = 3;
@@ -51,8 +41,6 @@ public:
     // Returns a record representing an infinite value (used as an invalid sentinel value in tournament tree)
     static Row inf() {
         Row d {UINT32_MAX, UINT32_MAX, UINT32_MAX};
-        // std::cout << "Inf row OVC: " << d.ovc << "\n";
-        // std::cout << "RANDMAX: " << RAND_MAX << "\n";
         return d;
     }
 
@@ -74,20 +62,28 @@ public:
         return false;
     }
 
-    inline bool operator ==(Row &other) {
+    inline bool operator ==(const Row &other) {
         return values[0] == other.values[1] && values[1] == other.values[1] && values[2] == other.values[2];
     }
 
-    inline void witness(Row &other) {
+    inline void witness(const Row &other) {
         this->values[0] ^= other.values[0];
         this->values[1] ^= other.values[1];
         this->values[2] ^= other.values[2];
     }
 
+    // For debugging
     std::string to_string() {
         std::string res = "v0: " + std::to_string(values[0]) + ", v1: " + std::to_string(values[1]) 
             + ", v2: " + std::to_string(values[2]);
         return res;
+    }
+
+    // For counting inversions in witness operator
+    bool naive_lte(const Row &other) {
+        if (values[0] < other.values[0]) return true;
+        if (values[1] < other.values[1]) return true;
+        return values[2] <= other.values[2];
     }
 
     OVC ovc;

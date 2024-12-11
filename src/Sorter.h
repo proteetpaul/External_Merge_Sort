@@ -7,27 +7,6 @@
 #include <vector>
 #include <boost/align/aligned_allocator.hpp>
 
-/**
- * TODO():
- * - Refactor tournament tree -> done
- * - Use tournament tree class to implement external sort -> done
- * - Use tournament tree class to implement internal sort -> done
- * - Implement read_next() in Sorter class -> done
- * - Modify offset value codes -> done
- * - Modify CMakeLists
- * - Witness operator -> done
- * - Sort operator
- * - Testing
- * - Write tests
- * - Revisit cached pages implementation in add_record()
- * - Write claims
- * - Code cleanup
- * - Documentation
- * - Read cpumemory chapter 7
- * - Profile code for cache misses
- * - Check if prefetching is required. If not, add a comment
- * - Check if non-temporal access can be leveraged
- */
 
 // Class representing a run of size 1. This is used for implementing internal sort using tournament trees
 class SingleElementRun {
@@ -38,11 +17,9 @@ public:
 
     Row read_next() {
         if (!read_called) {
-            // std::cout << "here1\n";
             read_called = true;
             return (*d);
         }
-        // std::cout << "here2\n";
         return Row::inf();
     }
     

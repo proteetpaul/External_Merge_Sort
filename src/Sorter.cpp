@@ -43,11 +43,6 @@ void Sorter::sort_contents() {
         output_node = std::make_shared<ReaderNode>(current_alloc);
         return;
     }
-    // if (all_allocs.size() <= CACHE_SIZE/Alloc::PAGE_SIZE) {
-    //     // Internal merge sort the contents
-    //     // sort_current_run();
-    //     return;
-    // }
     // Create merge plan
     output_node = std::move(plan());
     if (output_node->is_internal_node()) {
@@ -62,9 +57,7 @@ bool Sorter::is_cache_filled() {
 }
 
 std::shared_ptr<Alloc> Sorter::sort_current_run() {
-    // TRACE (TRACE_VAL);
-    //  std::cout << "Size of current alloc: " << current_alloc->get_size() << "\n";
-    std::shared_ptr<Alloc> output = Alloc::create_alloc(current_alloc->get_size());
+    std::shared_ptr<Alloc> output = Alloc::create(current_alloc->get_size());
     std::vector<std::shared_ptr<SingleElementRun>> inputs;
     for (size_t offset=0; offset < current_alloc->get_size(); offset += sizeof(Row)) {
         auto ptr = std::make_shared<SingleElementRun>(current_alloc->read_record(offset));
@@ -74,7 +67,6 @@ std::shared_ptr<Alloc> Sorter::sort_current_run() {
     TournamentTree<SingleElementRun> tree {inputs};
     auto inf_record = Row::inf();
     while (true) {
-        // TODO(): Reduce memory copies while moving records
         auto top_record = tree.pop();
         if (top_record == inf_record) {
             // Merge is complete when the topmost record is invalid
@@ -103,7 +95,6 @@ std::shared_ptr<MergeNode> Sorter::plan() {
     auto cmp = [](const std::shared_ptr<SortNode> &n1, const std::shared_ptr<SortNode> &n2) {
         return n1->get_size() > n2->get_size();
     };
-    // std::cout << "Number of allocs: " << all_allocs.size() << "\n";
     std::priority_queue<std::shared_ptr<SortNode>, std::vector<std::shared_ptr<SortNode>>, decltype(cmp)> nodes(cmp);
     for (auto& alloc: all_allocs) {
         std::shared_ptr<SortNode> node = std::make_shared<ReaderNode>(alloc);
@@ -153,13 +144,12 @@ void MergeNode::execute() {
         }
     }
     // Setup memory for output of this run
-    output_alloc = Alloc::create_alloc(size);
+    output_alloc = Alloc::create(size);
     // Create tournament tree
     TournamentTree<SortNode> tree {inputs};
 
     auto inf_record = Row::inf();
     while (true) {
-        // TODO(): Reduce memory copies while moving records
         auto top_record = tree.pop();
         if (top_record == inf_record) {
             // Merge is complete when the topmost record is invalid

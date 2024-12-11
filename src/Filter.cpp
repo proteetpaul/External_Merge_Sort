@@ -44,10 +44,8 @@ bool FilterIterator::next (Row & row)
 	for (;;)
 	{
 		if ( ! _input->next (row))  return false;
-		// Filter random rows with a 50% probability
-		float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 		++ _consumed;
-		if (r >= 0.5)
+		if (_consumed % 2)
 			break;
 
 		_input->free (row);

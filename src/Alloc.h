@@ -15,22 +15,9 @@ class Alloc {
 public:
     Alloc() {
         write_offset = 0;
-        flushed = false;
     }
 
-    static std::unique_ptr<Alloc> create() {
-        TRACE (TRACE_VAL);
-        auto alloc_ptr = std::make_unique<Alloc>();
-        alloc_ptr->capacity = PAGE_SIZE;
-        alloc_ptr->start_addr = mmap64(nullptr, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-        if (alloc_ptr->start_addr == MAP_FAILED) {
-            return nullptr;
-        }
-        return alloc_ptr;
-    }
-
-    static std::shared_ptr<Alloc> create_alloc(size_t size=PAGE_SIZE) {
-        TRACE (TRACE_VAL);
+    static std::shared_ptr<Alloc> create(size_t size=PAGE_SIZE) {
         // make size a multiple of 64 bytes to avoid cache line split
         size += (CACHE_LINE_SIZE - size%CACHE_LINE_SIZE);
         auto alloc_ptr = std::make_shared<Alloc>();
@@ -49,22 +36,16 @@ public:
 
     inline void prepare_for_read() {
         TRACE (TRACE_VAL);
-        // TODO(): Prefetch the address
         read_offset = 0ll;
     }
 
     inline Row* read_record(size_t offset) {
-        // TODO(): Add memory access check
-        TRACE (false);
-        // std::cout << "Reading at offset: " << offset << "\n";
         return reinterpret_cast<Row*>(start_addr + offset);
     }
 
     // Explicitly flush the cache lines to memory
     inline void flush() {
-        TRACE (TRACE_VAL);
         void *cur_ptr = start_addr;
-        // TODO(): Does this help?
         for (size_t offset = 0; offset < capacity; offset += CACHE_LINE_SIZE) {
             _mm_clflush((char *)start_addr + offset);
         }
@@ -76,7 +57,6 @@ public:
 
     // TODO(): Make this write(ptr, offset, bytes)
     inline void write(const void *ptr, size_t bytes) {
-        TRACE (false);
         memcpy(start_addr + write_offset, ptr, bytes);
         write_offset += bytes;
     }
@@ -101,6 +81,4 @@ private:
     size_t read_offset;
 
     size_t capacity;
-
-    bool flushed;
 };
