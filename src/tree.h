@@ -1,6 +1,7 @@
 #pragma once
 #include "Record.h"
 #include <vector>
+#include <iostream>
 #include <memory>
 #include <boost/align/aligned_allocator.hpp>
 
@@ -8,11 +9,13 @@
  * Struct representing a node in a tournament tree
  */
 struct TournamentTreeNode {
-    DataRecord record;
+    Row record;
 
     uint32_t index; // run identifier
 
-    TournamentTreeNode(DataRecord record, uint32_t index): record(std::move(record)), index(index) {}
+    TournamentTreeNode(Row record, uint32_t index): record(std::move(record)), index(index) {}
+
+    TournamentTreeNode() = default;
 };
 
 /**
@@ -27,33 +30,43 @@ public:
         initialize();
     }
     
-    DataRecord pop() {
+    Row pop() {
+        ctr++;
+        TRACE (false);
+        // std::cout << "pop called " << ctr << " times\n";
         auto top_node = tournament_tree[0];
         leaf_to_root_pass(top_node.index);
         return top_node.record;
     }
 
 private:
+    int ctr {0};
     // Array to hold tournament tree for external merge sort
-    std::vector<TournamentTreeNode, boost::alignment::aligned_allocator<TournamentTreeNode, 64>> tournament_tree;
+    // std::vector<TournamentTreeNode, boost::alignment::aligned_allocator<TournamentTreeNode, 64>> tournament_tree;
+    std::vector<TournamentTreeNode> tournament_tree;
 
     // Build the tournament tree from the inputs
     std::vector<std::shared_ptr<ReaderType>> inputs;
 
     void initialize() {
+        TRACE (TRACE_VAL);
         size_t input_size = inputs.size();
+        std::cout << "size of inputs: " << inputs.size() << "\n";
         uint32_t closest_power_of_2 = 1;
         while (closest_power_of_2 < input_size) {
             closest_power_of_2 *= 2;
         }
         tournament_tree.resize(closest_power_of_2);
+        // TODO(): Top record is lost!!
         auto val = init_helper(0);
         tournament_tree[0].index = val.second;
         tournament_tree[0].record = std::move(val.first);
     }
 
     // Recursive helper method for building the initial tournament tree
-    std::pair<DataRecord, uint32_t> init_helper(uint32_t i) {
+    std::pair<Row, uint32_t> init_helper(uint32_t i) {
+        TRACE (true);
+        // std::cout << i << "\n";
         size_t size = tournament_tree.size();
         
         if (i >= size) {
@@ -62,7 +75,7 @@ private:
             if (run_idx < inputs.size()) {
                 return std::make_pair<>(inputs[run_idx]->read_next(), run_idx);
             } else {
-                return std::make_pair<>(DataRecord::inf(), run_idx);
+                return std::make_pair<>(Row::inf(), run_idx);
             }
         } else {
             /**
@@ -71,8 +84,8 @@ private:
              * - Compare the records obtained from recursive calls and store the larger record (loser) in the current node
              * - Return the winner to the parent node
              */
-            uint32_t i1 = 2*i;
-            uint32_t i2 = 2*i + 1;
+            uint32_t i1 = 2*i + 1;
+            uint32_t i2 = 2*i + 2;
             auto val1 = init_helper(i1);
             auto val2 = init_helper(i2);
             auto compare_val = (val1.first < val2.first);   // Compare the data records
@@ -90,6 +103,9 @@ private:
 
     // Performs leaf-to-root pass in tournament tree
     void leaf_to_root_pass(uint32_t run_idx) {
+        TRACE (false);
+        // std::cout << run_idx << "\n";
+        // std::cout << inputs.size() << "\n";
         uint32_t idx = (tournament_tree.size() + run_idx)/2;
         auto new_record = inputs[run_idx]->read_next();
         TournamentTreeNode cur_node {new_record, run_idx};

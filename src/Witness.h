@@ -1,4 +1,5 @@
 #include "Iterator.h"
+#include "Record.h"
 
 class WitnessPlan : public Plan
 {
@@ -22,4 +23,5 @@ private:
 	WitnessPlan const * const _plan;
 	Iterator * const _input;
 	RowCount _rows;
+	Row witness_record;
 }; // class WitnessIterator

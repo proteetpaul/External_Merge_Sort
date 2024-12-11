@@ -1,4 +1,5 @@
 #include "Witness.h"
+#include <iostream>
 
 WitnessPlan::WitnessPlan (char const * const name, Plan * const input)
 	: Plan (name), _input (input)
@@ -34,14 +35,16 @@ WitnessIterator::~WitnessIterator ()
 	traceprintf ("%s witnessed %lu rows\n",
 			_plan->_name,
 			(unsigned long) (_rows));
+	// traceprintf ("Witness record: %s", witness_record.to_string());
+	std::cout << "Witness output: " << witness_record.to_string() << "\n";
 } // WitnessIterator::~WitnessIterator
 
 bool WitnessIterator::next (Row & row)
 {
 	TRACE (TRACE_VAL);
-
 	if ( ! _input->next (row))  return false;
 	++ _rows;
+	witness_record.witness(row);
 	return true;
 } // WitnessIterator::next
 

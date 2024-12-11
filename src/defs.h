@@ -4,13 +4,13 @@
 #include <stdint.h>
 #include <cstdio>
 
-#define TRACE_VAL false
+#define TRACE_VAL true
 
 typedef uint8_t byte;
 
 #define slotsof(a)	(sizeof (a) / sizeof (a[0]))
 
-#define nullptr	((void *) NULL)
+// #define nullptr	((void *) NULL)
 
 #define yesno(b)	((b) ? "yes" : "no")
 
@@ -52,6 +52,7 @@ private :
 	char const * const _function;
 	char const * const _file;
 	int const _line;
+	static int indent;
 }; // class Trace
 
 #define TRACE(trace)	Trace __trace (trace, __FUNCTION__, __FILE__, __LINE__)

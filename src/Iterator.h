@@ -31,5 +31,5 @@ private:
 	RowCount _rows;
 
 protected:
-	std::vector<DataRecord, boost::alignment::aligned_allocator<DataRecord, 64>> records;
+	std::vector<Row, boost::alignment::aligned_allocator<Row, 64>> records;
 }; // class Iterator

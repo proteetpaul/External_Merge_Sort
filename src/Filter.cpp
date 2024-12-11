@@ -1,4 +1,5 @@
 #include "Filter.h"
+#include <random>
 
 FilterPlan::FilterPlan (char const * const name, Plan * const input)
 	: Plan (name), _input (input)
@@ -43,9 +44,10 @@ bool FilterIterator::next (Row & row)
 	for (;;)
 	{
 		if ( ! _input->next (row))  return false;
-
+		// Filter random rows with a 50% probability
+		float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 		++ _consumed;
-		if (_consumed % 2 != 0) // the fake filter predicate
+		if (r >= 0.5)
 			break;
 
 		_input->free (row);

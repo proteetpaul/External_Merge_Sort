@@ -1,14 +1,14 @@
 #include "Iterator.h"
 
-Row::Row ()
-{
-	TRACE (TRACE_VAL);
-} // Row::Row
+// Row::Row ()
+// {
+// 	TRACE (TRACE_VAL);
+// } // Row::Row
 
-Row::~Row ()
-{
-	TRACE (TRACE_VAL);
-} // Row::~Row
+// Row::~Row ()
+// {
+// 	TRACE (TRACE_VAL);
+// } // Row::~Row
 
 Plan::Plan (char const * const name)
 	: _name (name)

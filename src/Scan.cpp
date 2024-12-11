@@ -47,6 +47,6 @@ bool ScanIterator::next (Row & row)
 void ScanIterator::free (Row & row)
 {
 	TRACE (TRACE_VAL);
-	Row* new_row = dynamic_cast<Row*>(DataRecord::generate_random());
+	Row* new_row = dynamic_cast<Row*>(Row::generate_random());
 	row = std::move(*new_row);	
 } // ScanIterator::free

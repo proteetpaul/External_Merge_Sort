@@ -1,4 +1,5 @@
 #include "Iterator.h"
+#include "Sorter.h"
 
 class SortPlan : public Plan
 {
@@ -22,4 +23,5 @@ private:
 	SortPlan const * const _plan;
 	Iterator * const _input;
 	RowCount _consumed, _produced;
+	std::unique_ptr<Sorter> sorter;
 }; // class SortIterator

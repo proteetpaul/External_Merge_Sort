@@ -3,6 +3,7 @@
 #include "Record.h"
 #include "Alloc.h"
 #include <memory>
+#include <iostream>
 #include <vector>
 #include <boost/align/aligned_allocator.hpp>
 
@@ -13,10 +14,15 @@
  * - Use tournament tree class to implement internal sort -> done
  * - Implement read_next() in Sorter class -> done
  * - Modify offset value codes -> done
- * - Revisit cached pages implementation in add_record()
  * - Modify CMakeLists
+ * - Witness operator -> done
+ * - Sort operator
  * - Testing
+ * - Write tests
+ * - Revisit cached pages implementation in add_record()
+ * - Write claims
  * - Code cleanup
+ * - Documentation
  * - Read cpumemory chapter 7
  * - Profile code for cache misses
  * - Check if prefetching is required. If not, add a comment
@@ -26,22 +32,92 @@
 // Class representing a run of size 1. This is used for implementing internal sort using tournament trees
 class SingleElementRun {
 public:
-    SingleElementRun(DataRecord* d): d(d) {} 
+    SingleElementRun(Row* d): d(d) {} 
 
-    DataRecord read_next() {
+    Row read_next() {
         if (!read_called) {
+            // std::cout << "here1\n";
             read_called = true;
             return (*d);
         }
-        return DataRecord::inf();
+        // std::cout << "here2\n";
+        return Row::inf();
     }
     
 private:
     bool read_called;
 
-    DataRecord* d;
+    Row* d;
     
 };
+
+/**
+ * Base class to represent a node in the merge tree for external sorting
+ */
+class SortNode {
+public:
+    // Read next record
+    virtual Row& read_next() = 0;
+
+    virtual bool is_internal_node() = 0;
+
+    virtual size_t get_size() = 0;
+};
+
+
+/**
+ * Class to merge sorted input runs. These are non-leaf nodes in the plan for external merge sort
+ */
+class MergeNode : public SortNode {
+public:
+    MergeNode(std::vector<std::shared_ptr<SortNode>> &input_nodes);
+
+    Row& read_next() override;
+
+    /**
+     * Execute the sort plan in a depth-first manner
+     */
+    void execute();
+
+    bool is_internal_node() override {
+        return true;
+    }
+
+    size_t get_size() override;
+
+    std::vector<std::shared_ptr<SortNode>> inputs;
+private:
+    size_t size;
+
+    std::shared_ptr<Alloc> output_alloc;
+
+    size_t read_offset;
+};
+
+/**
+ * Class to directly read from a sorted run. These are the leaf nodes in the plan for external merge sort
+ */
+class ReaderNode: public SortNode {
+public:
+    ReaderNode(std::shared_ptr<Alloc> &input);
+
+    Row& read_next() override;
+
+    bool is_internal_node() override {
+        return false;
+    }
+
+    inline size_t get_size() override {
+        return size;
+    };
+private:
+    size_t size;
+
+    size_t read_offset;
+
+    std::shared_ptr<Alloc> input {nullptr};
+};
+
 
 /**
  * Class responsible for coordinating the sort operation
@@ -53,12 +129,12 @@ public:
     /**
      * Add a single record to the Sorter
      */
-    void add_record(DataRecord *record);
+    void add_record(Row *record);
 
     /**
      * Return next record in sorted order
      */
-    DataRecord& get_next_record();
+    Row& get_next_record();
 
     /**
      * Sort all records. This is called after all records have been added
@@ -92,70 +168,4 @@ private:
     std::shared_ptr<Alloc> sort_current_run();
 };
 
-/**
- * Base class to represent a node in the merge tree for external sorting
- */
-class SortNode {
-public:
-    // Read next record
-    virtual DataRecord& read_next() = 0;
-
-    virtual bool is_internal_node() = 0;
-
-    virtual size_t get_size() = 0;
-};
-
-
-/**
- * Class to merge sorted input runs. These are non-leaf nodes in the plan for external merge sort
- */
-class MergeNode : public SortNode {
-public:
-    MergeNode(std::vector<std::shared_ptr<SortNode>> &input_nodes);
-
-    DataRecord& read_next() override;
-
-    /**
-     * Execute the sort plan in a depth-first manner
-     */
-    void execute();
-
-    bool is_internal_node() override {
-        return true;
-    }
-
-    size_t get_size() override;
-
-    std::vector<std::shared_ptr<SortNode>> inputs;
-private:
-    size_t size;
-
-    std::shared_ptr<Alloc> output_alloc;
-
-    size_t read_offset;
-};
-
-/**
- * Class to directly read from a sorted run. These are the leaf nodes in the plan for external merge sort
- */
-class ReaderNode: public SortNode {
-public:
-    ReaderNode(std::shared_ptr<Alloc> &input);
-
-    DataRecord& read_next() override;
-
-    bool is_internal_node() override {
-        return false;
-    }
-
-    inline size_t get_size() override {
-        return size;
-    };
-private:
-    size_t size;
-
-    size_t read_offset;
-
-    std::shared_ptr<Alloc> input {nullptr};
-};
 

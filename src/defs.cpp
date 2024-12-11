@@ -4,17 +4,28 @@
 #include "defs.h"
 
 // -----------------------------------------------------------------
+int Trace::indent = 0;
 
 Trace::Trace (bool const trace, char const * const function,
 		char const * const file, int const line)
 	: _output (trace), _function (function), _file (file), _line (line)
 {
-	_trace (">>>>>");
+	if (_output) indent++;
+	int size = indent*2 + 1;
+	char lead[indent*2+1];
+	for (int i=0; i<size-1; i++) lead[i]=' ';
+	lead[size-1]='-';
+	_trace (lead);
 } // Trace::Trace
 
 Trace::~Trace ()
 {
-	_trace ("<<<<<");
+	int size = indent*2 + 1;
+	char lead[indent*2+1];
+	for (int i=0; i<size-1; i++) lead[i]=' ';
+	lead[size-1]='-';
+	_trace (lead);
+	if (_output) indent--;
 } // Trace::~Trace
 
 void Trace::_trace (char const lead [])

@@ -23,10 +23,13 @@ SortIterator::SortIterator (SortPlan const * const plan) :
 	_consumed (0), _produced (0)
 {
 	TRACE (TRACE_VAL);
-
-	for (Row row;  _input->next (row);  _input->free (row))
+	sorter = std::make_unique<Sorter>();
+	for (Row row;  _input->next (row);  _input->free (row)) {
+		sorter->add_record(&row);
 		++ _consumed;
+	}
 	delete _input;
+	sorter->sort_contents();
 
 	traceprintf ("%s consumed %lu rows\n",
 			_plan->_name,
@@ -48,7 +51,7 @@ bool SortIterator::next (Row & row)
 	TRACE (TRACE_VAL);
 
 	if (_produced >= _consumed)  return false;
-
+	Row record = sorter->get_next_record();
 	++ _produced;
 	return true;
 } // SortIterator::next

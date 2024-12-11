@@ -1,4 +1,6 @@
 #pragma once
+#include "defs.h"
+#include <iostream>
 #include <cstdint>
 #include <memory>
 #include <unistd.h>
@@ -17,7 +19,9 @@ public:
     }
 
     static std::unique_ptr<Alloc> create() {
+        TRACE (TRACE_VAL);
         auto alloc_ptr = std::make_unique<Alloc>();
+        alloc_ptr->capacity = PAGE_SIZE;
         alloc_ptr->start_addr = mmap64(nullptr, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
         if (alloc_ptr->start_addr == MAP_FAILED) {
             return nullptr;
@@ -26,6 +30,7 @@ public:
     }
 
     static std::shared_ptr<Alloc> create_alloc(size_t size=PAGE_SIZE) {
+        TRACE (TRACE_VAL);
         // make size a multiple of 64 bytes to avoid cache line split
         size += (CACHE_LINE_SIZE - size%CACHE_LINE_SIZE);
         auto alloc_ptr = std::make_shared<Alloc>();
@@ -43,17 +48,20 @@ public:
     }
 
     inline void prepare_for_read() {
+        TRACE (TRACE_VAL);
         // TODO(): Prefetch the address
         read_offset = 0ll;
     }
 
-    inline DataRecord* read_record(size_t offset) {
+    inline Row* read_record(size_t offset) {
         // TODO(): Add memory access check
-        return reinterpret_cast<DataRecord*>(start_addr + offset);
+        TRACE (false);
+        return reinterpret_cast<Row*>(start_addr + offset);
     }
 
     // Explicitly flush the cache lines to memory
     inline void flush() {
+        TRACE (TRACE_VAL);
         void *cur_ptr = start_addr;
         // TODO(): Does this help?
         for (size_t offset = 0; offset < capacity; offset += CACHE_LINE_SIZE) {
@@ -66,12 +74,10 @@ public:
     }
 
     inline void write(const void *ptr, size_t bytes) {
+        TRACE (false);
+        // std::cout << "bytes: " << bytes << "\n";
         memcpy(start_addr + write_offset, ptr, bytes);
         write_offset += bytes;
-    }
-
-    inline void internal_sort() {
-
     }
 
     inline size_t get_size() {

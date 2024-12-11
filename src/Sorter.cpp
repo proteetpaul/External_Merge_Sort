@@ -1,4 +1,5 @@
 #include "Sorter.h"
+#include "defs.h"
 #include "tree.h"
 #include <queue>
 
@@ -8,37 +9,50 @@ Sorter::Sorter() {
     input_size = 1;
 }
 
-void Sorter::add_record(DataRecord *record) {
-    if (current_alloc->can_write(sizeof(DataRecord))) {
-        current_alloc->write(static_cast<void*>(record), sizeof(DataRecord));
+void Sorter::add_record(Row *record) {
+    TRACE (TRACE_VAL);
+    if (current_alloc->can_write(sizeof(Row))) {
+        std::cout << "Record string: " << record->to_string() << "\n";
+        // If the current run has space, write the new record to it
+        current_alloc->write(static_cast<void*>(record), sizeof(Row));
         return;
     }
     // TODO(): We can use the current_alloc for the subsequent run?
     current_alloc = std::move(sort_current_run());
     if (is_cache_filled()) {
         // Cache is full. Spill to memory
-        current_alloc->flush();
-        all_allocs.push_back(std::move(current_alloc));
-        current_alloc = Alloc::create();
-        current_alloc->write(static_cast<void*>(record), sizeof(DataRecord));
+        current_alloc->flush();        
     } else {
         cached_allocs.push_back(std::move(current_alloc));
     }
+    all_allocs.push_back(std::move(current_alloc));
     current_alloc = Alloc::create();
+    current_alloc->write(static_cast<void*>(record), sizeof(Row));
     input_size++;
 }
 
-DataRecord& Sorter::get_next_record() {
+Row& Sorter::get_next_record() {
+    TRACE (TRACE_VAL);
     return output_node->read_next();
 }
 
 void Sorter::sort_contents() {
-    if (cached_allocs.size() <= CACHE_SIZE/Alloc::PAGE_SIZE) {
-        // Internal merge sort the contents
-        // sort_current_run();
-
+    TRACE (TRACE_VAL);
+    if (current_alloc->get_size()) {
+        current_alloc = std::move(sort_current_run());
+        // cached_allocs.push_back(current_alloc);
+        all_allocs.push_back(current_alloc);
+    }
+    if (all_allocs.size() == 1) {
+        // All the rows fit in a single cache run
+        output_node = std::make_shared<ReaderNode>(current_alloc);
         return;
     }
+    // if (all_allocs.size() <= CACHE_SIZE/Alloc::PAGE_SIZE) {
+    //     // Internal merge sort the contents
+    //     // sort_current_run();
+    //     return;
+    // }
     // Create merge plan
     output_node = std::move(plan());
     if (output_node->is_internal_node()) {
@@ -53,15 +67,16 @@ bool Sorter::is_cache_filled() {
 }
 
 std::shared_ptr<Alloc> Sorter::sort_current_run() {
+    TRACE (TRACE_VAL);
     std::shared_ptr<Alloc> output = Alloc::create_alloc(current_alloc->get_size());
     std::vector<std::shared_ptr<SingleElementRun>> inputs;
-    for (size_t offset=0; offset < current_alloc->get_size(); offset += sizeof(DataRecord)) {
+    for (size_t offset=0; offset < current_alloc->get_size(); offset += sizeof(Row)) {
         auto ptr = std::make_shared<SingleElementRun>(current_alloc->read_record(offset));
         inputs.push_back(std::move(ptr));
     }
 
     TournamentTree<SingleElementRun> tree {inputs};
-    auto inf_record = DataRecord::inf();
+    auto inf_record = Row::inf();
     while (true) {
         // TODO(): Reduce memory copies while moving records
         auto top_record = tree.pop();
@@ -70,16 +85,14 @@ std::shared_ptr<Alloc> Sorter::sort_current_run() {
             break;
         }
         
+        std::cout << "Writing record to output: " << top_record.to_string() << "\n";
         // Write the sorted record
-        output->write((void*)(&top_record), sizeof(DataRecord));
+        output->write((void*)(&top_record), sizeof(Row));
     }
     return output;
 }
 
 std::shared_ptr<MergeNode> Sorter::plan() {
-    if (current_alloc->get_size()) {
-        current_alloc = sort_current_run();
-    }
     // TODO(): Only the initial fan-in needs to be calculated. All other fan-ins should be same as the maximum (merge optimization)
     uint32_t F_final = F; // Final merge fan-in
     size_t W = input_size;
@@ -139,7 +152,7 @@ void MergeNode::execute() {
     // Create tournament tree
     TournamentTree<SortNode> tree {inputs};
 
-    auto inf_record = DataRecord::inf();
+    auto inf_record = Row::inf();
     while (true) {
         // TODO(): Reduce memory copies while moving records
         auto top_record = tree.pop();
@@ -149,7 +162,7 @@ void MergeNode::execute() {
         }
         
         // Write the sorted record
-        output_alloc->write((void*)(&top_record), sizeof(DataRecord));
+        output_alloc->write((void*)(&top_record), sizeof(Row));
     }
 
     read_offset = 0ll;
@@ -258,9 +271,9 @@ void MergeNode::execute() {
 //     tournament_tree[idx] = std::move(cur_node);
 // }
 
-DataRecord& MergeNode::read_next() {
-    DataRecord& ret_val = *(output_alloc->read_record(read_offset));
-    read_offset += sizeof(DataRecord);
+Row& MergeNode::read_next() {
+    Row& ret_val = *(output_alloc->read_record(read_offset));
+    read_offset += sizeof(Row);
     return ret_val;
 }
 
@@ -269,8 +282,8 @@ ReaderNode::ReaderNode(std::shared_ptr<Alloc> &input): input(input), read_offset
     size = input->get_size();
 }
 
-DataRecord& ReaderNode::read_next() {
-    DataRecord& ret_val = *(input->read_record(read_offset));
-    read_offset += sizeof(DataRecord);
+Row& ReaderNode::read_next() {
+    Row& ret_val = *(input->read_record(read_offset));
+    read_offset += sizeof(Row);
     return ret_val;
 }
