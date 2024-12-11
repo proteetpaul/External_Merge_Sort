@@ -51,7 +51,7 @@ bool SortIterator::next (Row & row)
 	TRACE (TRACE_VAL);
 
 	if (_produced >= _consumed)  return false;
-	Row record = sorter->get_next_record();
+	row = sorter->get_next_record();
 	++ _produced;
 	return true;
 } // SortIterator::next

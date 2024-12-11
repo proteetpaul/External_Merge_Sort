@@ -32,15 +32,18 @@ public:
     
     Row pop() {
         ctr++;
+        auto prev_top_node = std::move(top_node);
         TRACE (false);
-        // std::cout << "pop called " << ctr << " times\n";
-        auto top_node = tournament_tree[0];
-        leaf_to_root_pass(top_node.index);
-        return top_node.record;
+        leaf_to_root_pass(prev_top_node.index);
+        return prev_top_node.record;
     }
 
 private:
+    // TODO(): Remove this
     int ctr {0};
+
+    TournamentTreeNode top_node;
+
     // Array to hold tournament tree for external merge sort
     // std::vector<TournamentTreeNode, boost::alignment::aligned_allocator<TournamentTreeNode, 64>> tournament_tree;
     std::vector<TournamentTreeNode> tournament_tree;
@@ -51,22 +54,20 @@ private:
     void initialize() {
         TRACE (TRACE_VAL);
         size_t input_size = inputs.size();
-        std::cout << "size of inputs: " << inputs.size() << "\n";
+        // std::cout << "size of inputs: " << inputs.size() << "\n";
         uint32_t closest_power_of_2 = 1;
         while (closest_power_of_2 < input_size) {
             closest_power_of_2 *= 2;
         }
         tournament_tree.resize(closest_power_of_2);
-        // TODO(): Top record is lost!!
-        auto val = init_helper(0);
-        tournament_tree[0].index = val.second;
-        tournament_tree[0].record = std::move(val.first);
+        auto res = init_helper(0);
+        top_node.index = res.second;
+        top_node.record = std::move(res.first);
     }
 
     // Recursive helper method for building the initial tournament tree
     std::pair<Row, uint32_t> init_helper(uint32_t i) {
-        TRACE (true);
-        // std::cout << i << "\n";
+        TRACE (TRACE_VAL);
         size_t size = tournament_tree.size();
         
         if (i >= size) {
@@ -88,15 +89,15 @@ private:
             uint32_t i2 = 2*i + 2;
             auto val1 = init_helper(i1);
             auto val2 = init_helper(i2);
-            auto compare_val = (val1.first < val2.first);   // Compare the data records
-            if (compare_val < 0) {
-                tournament_tree[i].record = std::move(val1.first);
-                tournament_tree[i].index = val1.second;
-                return val2;
-            } else {
+            auto compare_res = (val1.first < val2.first);   // Compare the data records
+            if (compare_res) {
                 tournament_tree[i].record = std::move(val2.first);
                 tournament_tree[i].index = val2.second;
                 return val1;
+            } else {
+                tournament_tree[i].record = std::move(val1.first);
+                tournament_tree[i].index = val1.second;
+                return val2;
             }
         }
     }
@@ -104,12 +105,12 @@ private:
     // Performs leaf-to-root pass in tournament tree
     void leaf_to_root_pass(uint32_t run_idx) {
         TRACE (false);
-        // std::cout << run_idx << "\n";
+        // std::cout << "Run idx:" << run_idx << "\n";
         // std::cout << inputs.size() << "\n";
         uint32_t idx = (tournament_tree.size() + run_idx)/2;
         auto new_record = inputs[run_idx]->read_next();
         TournamentTreeNode cur_node {new_record, run_idx};
-        while (idx > 0) {
+        while (idx >= 0) {
             /**
              * Compare cur_node and tournament_tree[idx]
              * Store the loser at position idx
@@ -118,8 +119,12 @@ private:
             if (tournament_tree[idx].record < cur_node.record) {
                 std::swap(tournament_tree[idx], cur_node);
             }
+            if (!idx) {
+                break;
+            }
             idx /= 2;
         }
-        tournament_tree[idx] = std::move(cur_node);
+        top_node = std::move(cur_node);
+        // tournament_tree[idx] = std::move(cur_node);
     }
 };

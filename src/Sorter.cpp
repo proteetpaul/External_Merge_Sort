@@ -12,7 +12,7 @@ Sorter::Sorter() {
 void Sorter::add_record(Row *record) {
     TRACE (TRACE_VAL);
     if (current_alloc->can_write(sizeof(Row))) {
-        std::cout << "Record string: " << record->to_string() << "\n";
+        // std::cout << "Record string: " << record->to_string() << "\n";
         // If the current run has space, write the new record to it
         current_alloc->write(static_cast<void*>(record), sizeof(Row));
         return;
@@ -23,7 +23,7 @@ void Sorter::add_record(Row *record) {
         // Cache is full. Spill to memory
         current_alloc->flush();        
     } else {
-        cached_allocs.push_back(std::move(current_alloc));
+        cached_allocs.push_back(current_alloc);
     }
     all_allocs.push_back(std::move(current_alloc));
     current_alloc = Alloc::create();
@@ -85,7 +85,7 @@ std::shared_ptr<Alloc> Sorter::sort_current_run() {
             break;
         }
         
-        std::cout << "Writing record to output: " << top_record.to_string() << "\n";
+        // std::cout << "Writing record to output: " << top_record.to_string() << "\n";
         // Write the sorted record
         output->write((void*)(&top_record), sizeof(Row));
     }
@@ -93,6 +93,7 @@ std::shared_ptr<Alloc> Sorter::sort_current_run() {
 }
 
 std::shared_ptr<MergeNode> Sorter::plan() {
+    TRACE (true);
     // TODO(): Only the initial fan-in needs to be calculated. All other fan-ins should be same as the maximum (merge optimization)
     uint32_t F_final = F; // Final merge fan-in
     size_t W = input_size;
@@ -100,6 +101,7 @@ std::shared_ptr<MergeNode> Sorter::plan() {
     auto cmp = [](const std::shared_ptr<SortNode> &n1, const std::shared_ptr<SortNode> &n2) {
         return n1->get_size() < n2->get_size();
     };
+    // std::cout << "Number of allocs: " << all_allocs.size() << "\n";
     std::priority_queue<std::shared_ptr<SortNode>, std::vector<std::shared_ptr<SortNode>>, decltype(cmp)> nodes(cmp);
     for (auto& alloc: all_allocs) {
         std::shared_ptr<SortNode> node = std::make_shared<ReaderNode>(alloc);
@@ -136,6 +138,7 @@ size_t MergeNode::get_size() {
 }
 
 void MergeNode::execute() {
+    TRACE (true);
     size_t total_size = 0ll;
     
     for (auto& input_node: inputs) {
@@ -280,10 +283,12 @@ Row& MergeNode::read_next() {
 // Method definitions for ReaderNode
 ReaderNode::ReaderNode(std::shared_ptr<Alloc> &input): input(input), read_offset(0ll) {
     size = input->get_size();
+    input->prepare_for_read();
 }
 
 Row& ReaderNode::read_next() {
     Row& ret_val = *(input->read_record(read_offset));
     read_offset += sizeof(Row);
+    // std::cout << "Reader node read row: " << ret_val.to_string() << "\n";
     return ret_val;
 }
