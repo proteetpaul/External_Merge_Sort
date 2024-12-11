@@ -17,7 +17,7 @@ add_library(merge_sort SHARED
             Scan.h  Scan.cpp
             Sort.h  Sort.cpp 
             Witness.cpp Witness.h
-            Sorter.h Sorter.cpp tree.h)
+            Sorter.h Sorter.cpp Tree.h)
 
 set_property(TARGET merge_sort PROPERTY POSITION_INDEPENDENT_CODE ON)
 
